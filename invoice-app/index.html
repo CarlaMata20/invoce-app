@@ -1,0 +1,293 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Invoice Generator</title>
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+
+  <style>
+    .pdf-only { display: none; }
+  </style>
+</head>
+
+<body class="bg-gray-100 p-4">
+
+<!-- COMPANY INFO -->
+<div class="bg-white rounded-xl p-4 shadow mb-4 space-y-3 no-pdf">
+  <h2 class="font-semibold">Company Info</h2>
+  <input id="companyPhone" class="w-full border p-2" placeholder="Phone">
+  <input id="companyEmail" class="w-full border p-2" placeholder="Email">
+  <input id="companyAddress" class="w-full border p-2" placeholder="Address">
+  <button onclick="saveCompany()" class="w-full bg-gray-800 text-white p-2 text-sm">
+    Save company data
+  </button>
+</div>
+
+<!-- INVOICE -->
+<div id="invoice" class="bg-white p-6 text-sm">
+
+  <!-- HEADER -->
+  <div class="grid grid-cols-3 gap-4 mb-6 items-start">
+    <div>
+      <p class="font-semibold">Your Satisfaction is Our Priority</p>
+      <p id="pdfCompanyAddress"></p>
+      <p>Phone: <span id="pdfCompanyPhone"></span></p>
+      <p>Email: <span id="pdfCompanyEmail"></span></p>
+    </div>
+
+    <div class="text-center">
+      <img src="Imagenes/logo.jpg.jpg" class="h-20 mx-auto">
+    </div>
+
+    <div class="text-right">
+      <p class="font-bold text-lg">QUOTE</p>
+      <p>Invoice #: <span id="invoiceNumber"></span></p>
+      <p>Date: <span id="date"></span></p>
+    </div>
+  </div>
+
+  <!-- CUSTOMER -->
+  <div class="border p-3 mb-6">
+    <p class="font-semibold mb-2">Customer</p>
+
+    <div class="pdf-only leading-relaxed mb-3">
+      <p><strong>Name:</strong> <span id="customerNamePdf">-</span></p>
+      <p><strong>Phone:</strong> <span id="customerPhonePdf">-</span></p>
+      <p><strong>Email:</strong> <span id="customerEmailPdf">-</span></p>
+      <p><strong>Address:</strong> <span id="customerAddressPdf">-</span></p>
+    </div>
+
+    <div class="grid grid-cols-2 gap-2 no-pdf">
+      <input id="customerNameInput" class="border p-1" placeholder="Name">
+      <input id="customerPhoneInput" class="border p-1" placeholder="Phone">
+      <input id="customerEmailInput" class="border p-1" placeholder="Email">
+      <input id="customerAddressInput" class="border p-1" placeholder="Address">
+    </div>
+  </div>
+
+  <!-- WORK TYPE -->
+  <div class="border p-3 mb-6">
+    <p class="font-semibold mb-2">Work Type</p>
+
+    <div class="grid grid-cols-2 gap-2 no-pdf">
+      <label><input type="checkbox" id="chkDoors"> Doors</label>
+      <label><input type="checkbox" id="chkFloor"> Floor</label>
+      <label><input type="checkbox" id="chkStairs"> Stairs</label>
+      <label><input type="checkbox" id="chkBaseboards"> Baseboards</label>
+      <label><input type="checkbox" id="chkPainting"> Painting</label>
+    </div>
+
+    <div class="pdf-only grid grid-cols-2 gap-1 text-sm mt-2">
+      <span id="pdfDoors"></span>
+      <span id="pdfFloor"></span>
+      <span id="pdfStairs"></span>
+      <span id="pdfBaseboards"></span>
+      <span id="pdfPainting"></span>
+    </div>
+  </div>
+
+  <!-- ITEMS -->
+  <table class="w-full border mb-4">
+    <thead class="bg-gray-100">
+      <tr>
+        <th class="border p-2 text-left">Description</th>
+        <th class="border p-2 text-center">Qty</th>
+        <th class="border p-2 text-right">Price</th>
+        <th class="border p-2 text-right">Total</th>
+      </tr>
+    </thead>
+    <tbody id="itemsPdf"></tbody>
+  </table>
+
+  <div id="items" class="space-y-2 no-pdf mb-4"></div>
+
+  <button onclick="addItem()" class="border px-3 py-1 no-pdf">+ Add Item</button>
+
+  <!-- TOTALS -->
+  <div class="mt-6 space-y-2 text-right">
+    <div>
+      <span class="font-semibold">Subtotal:</span>
+      <span id="subtotal">$0.00</span>
+    </div>
+
+    <div class="no-pdf">
+      <span class="font-semibold">Discount (%):</span>
+      <input id="discountInput" type="number" min="0" max="100" value="0"
+        class="border p-1 w-20 text-right"
+        oninput="preparePdf()">
+    </div>
+
+    <div class="pdf-only">
+      <span class="font-semibold">Discount:</span>
+      <span id="discountPdf">-$0.00</span>
+    </div>
+
+    <div class="text-lg font-bold mt-2">
+      TOTAL: <span id="total">$0.00</span>
+    </div>
+  </div>
+
+  <!-- TERMS -->
+  <div class="text-xs mt-6">
+    <p class="font-semibold">Terms and Conditions:</p>
+    <p class="mb-4">
+      By signing this invoice, you have agreed to the above prices, specifications,
+      and conditions are satisfactory and hereby accepted. We are authorized to do
+      the work as specified. We are not responsible for any damages that occur over
+      time due to water, moisture or the foundation of the property settling or
+      cracking. Payments will be made as outlined. 50% deposit required upon
+      commencement. Remaining balance is due upon completion of work.
+    </p>
+  </div>
+ <!-- SIGNATURE & PAYMENTS (COMPACT) -->
+<div class="mt-6 flex gap-4 text-xs">
+
+  <!-- LEFT -->
+  <div class="border w-2/3 p-3 space-y-3">
+    <p>
+      Customer Name&nbsp;&nbsp;
+      <span class="inline-block border-b w-64 align-middle"></span>
+    </p>
+
+    <p>
+      Customer Signature&nbsp;
+      <span class="inline-block border-b w-64 align-middle"></span>
+    </p>
+  </div>
+
+  <!-- RIGHT -->
+  <div class="border w-1/3 p-3 space-y-2">
+    <p>
+      Initial payment:&nbsp; $
+      <span class="inline-block border-b w-24 align-middle"></span>
+    </p>
+
+    <p>
+      Intermediate payment:&nbsp; $
+      <span class="inline-block border-b w-24 align-middle"></span>
+    </p>
+
+    <p>
+      Balance Due:&nbsp; $
+      <span class="inline-block border-b w-24 align-middle"></span>
+    </p>
+  </div>
+
+</div>
+
+
+
+  <div class="h-8"></div>
+</div>
+
+<button onclick="generatePDF()" class="w-full bg-green-600 text-white p-3 mt-4 text-lg no-pdf">
+  GENERAR PDF
+</button>
+
+<script>
+date.innerText = new Date().toLocaleDateString();
+let inv = parseInt(localStorage.getItem('inv') || 1000) + 1;
+invoiceNumber.innerText = inv;
+
+function addItem() {
+  const d = document.createElement('div');
+  d.className = "border p-2";
+  d.innerHTML = `
+    <input class="desc w-full border p-1 mb-1" placeholder="Description">
+    <div class="flex gap-2">
+      <input class="qty w-1/2 border p-1" type="number" placeholder="Qty">
+      <input class="price w-1/2 border p-1" type="number" placeholder="Price">
+    </div>`;
+  items.appendChild(d);
+}
+addItem();
+
+function saveCompany() {
+  localStorage.setItem('companyData', JSON.stringify({
+    phone: companyPhone.value,
+    email: companyEmail.value,
+    address: companyAddress.value
+  }));
+  loadCompany();
+}
+
+function loadCompany() {
+  const c = JSON.parse(localStorage.getItem('companyData') || '{}');
+  pdfCompanyPhone.textContent = c.phone || '';
+  pdfCompanyEmail.textContent = c.email || '';
+  pdfCompanyAddress.textContent = c.address || '';
+}
+loadCompany();
+
+function preparePdf() {
+  customerNamePdf.textContent = customerNameInput.value || '-';
+  customerPhonePdf.textContent = customerPhoneInput.value || '-';
+  customerEmailPdf.textContent = customerEmailInput.value || '-';
+  customerAddressPdf.textContent = customerAddressInput.value || '-';
+
+  pdfDoors.textContent = chkDoors.checked ? '☑ DOORS' : '☐ DOORS';
+  pdfFloor.textContent = chkFloor.checked ? '☑ FLOOR' : '☐ FLOOR';
+  pdfStairs.textContent = chkStairs.checked ? '☑ STAIRS' : '☐ STAIRS';
+  pdfBaseboards.textContent = chkBaseboards.checked ? '☑ BASEBOARDS' : '☐ BASEBOARDS';
+  pdfPainting.textContent = chkPainting.checked ? '☑ PAINTING' : '☐ PAINTING';
+
+  itemsPdf.innerHTML = '';
+  let subtotalValue = 0;
+
+  document.querySelectorAll('#items > div').forEach(i => {
+    const d = i.querySelector('.desc').value || '';
+    const q = parseFloat(i.querySelector('.qty').value) || 0;
+    const p = parseFloat(i.querySelector('.price').value) || 0;
+    const t = q * p;
+    subtotalValue += t;
+
+    itemsPdf.innerHTML += `
+      <tr>
+        <td class="border p-2">${d}</td>
+        <td class="border p-2 text-center">${q}</td>
+        <td class="border p-2 text-right">$${p.toFixed(2)}</td>
+        <td class="border p-2 text-right">$${t.toFixed(2)}</td>
+      </tr>`;
+  });
+
+  subtotal.textContent = `$${subtotalValue.toFixed(2)}`;
+
+  const discountPercent = parseFloat(discountInput.value) || 0;
+  const discountAmount = subtotalValue * (discountPercent / 100);
+  discountPdf.textContent = `-$${discountAmount.toFixed(2)}`;
+
+  const finalTotal = subtotalValue - discountAmount;
+  total.textContent = `$${finalTotal.toFixed(2)}`;
+}
+
+function togglePdf(on) {
+  document.querySelectorAll('.no-pdf').forEach(e => e.style.display = on ? 'none' : '');
+  document.querySelectorAll('.pdf-only').forEach(e => e.style.display = on ? 'block' : 'none');
+}
+
+function generatePDF() {
+  preparePdf();
+  togglePdf(true);
+  window.scrollTo(0, 0);
+
+  setTimeout(() => {
+    html2pdf().from(invoice).set({
+      margin: [0.6, 0.5, 0.8, 0.5],
+      filename: `invoice-${inv}.pdf`,
+      html2canvas: { scale: 2, scrollY: 0, windowHeight: invoice.scrollHeight },
+      jsPDF: { unit: 'in', format: 'letter' }
+    }).save().then(() => {
+      localStorage.setItem('inv', inv);
+      inv++;
+      invoiceNumber.innerText = inv;
+      togglePdf(false);
+    });
+  }, 350);
+}
+</script>
+
+</body>
+</html>
