@@ -251,7 +251,6 @@ function loadCompany() {
   pdfCompanyAddress.textContent = c.address || '';
 }
 loadCompany();
-
 function preparePdf() {
   customerNamePdf.textContent = customerNameInput.value || '-';
   customerPhonePdf.textContent = customerPhoneInput.value || '-';
@@ -262,7 +261,6 @@ function preparePdf() {
   pdfStairs.textContent = chkStairs.checked ? '☑ STAIRS' : '☐ STAIRS';
   pdfBaseboards.textContent = chkBaseboards.checked ? '☑ BASEBOARDS' : '☐ BASEBOARDS';
   pdfPainting.textContent = chkPainting.checked ? '☑ PAINTING' : '☐ PAINTING';
-
 
   itemsPdf.innerHTML = '';
   let subtotalValue = 0;
@@ -294,8 +292,20 @@ function preparePdf() {
 
   initialPaymentPdf.textContent = initialPaymentInput.value || '0.00';
   intermediatePaymentPdf.textContent = intermediatePaymentInput.value || '0.00';
-  balanceDuePdf.textContent = balanceDueInput.value || '0.00';
+
+  // ===== BALANCE DUE (PDF EN ROJO) =====
+  const balance = parseFloat(balanceDueInput.value) || 0;
+  balanceDuePdf.textContent = balance.toFixed(2);
+
+  if (balance > 0) {
+    balanceDuePdf.style.color = '#dc2626'; // rojo
+    balanceDuePdf.style.fontWeight = 'bold';
+  } else {
+    balanceDuePdf.style.color = '#000';
+    balanceDuePdf.style.fontWeight = 'normal';
+  }
 }
+
 
 function togglePdf(on) {
   document.querySelectorAll('.no-pdf').forEach(e => e.style.display = on ? 'none' : '');
@@ -325,5 +335,6 @@ function generatePDF() {
 
 </body>
 </html>
+
 
 
