@@ -67,27 +67,29 @@
       <input id="customerAddressInput" class="border p-1" placeholder="Address">
     </div>
   </div>
-
   <!-- WORK TYPE -->
-  <div class="border p-3 mb-6">
-    <p class="font-semibold mb-2">Work Type</p>
+<div class="border p-3 mb-6">
+  <p class="font-semibold mb-2">Work Type</p>
 
-    <div class="grid grid-cols-2 gap-2 no-pdf">
-      <label><input type="checkbox" id="chkDoors"> Doors</label>
-      <label><input type="checkbox" id="chkFloor"> Floor</label>
-      <label><input type="checkbox" id="chkStairs"> Stairs</label>
-      <label><input type="checkbox" id="chkBaseboards"> Baseboards</label>
-      <label><input type="checkbox" id="chkPainting"> Painting</label>
-    </div>
-
-    <div class="pdf-only grid grid-cols-2 gap-1 text-sm mt-2">
-      <span id="pdfDoors"></span>
-      <span id="pdfFloor"></span>
-      <span id="pdfStairs"></span>
-      <span id="pdfBaseboards"></span>
-      <span id="pdfPainting"></span>
-    </div>
+  <!-- SCREEN -->
+  <div class="grid grid-cols-2 gap-2 no-pdf">
+    <label><input type="checkbox" id="chkDoors"> Doors</label>
+    <label><input type="checkbox" id="chkFloor"> Floor</label>
+    <label><input type="checkbox" id="chkStairs"> Stairs</label>
+    <label><input type="checkbox" id="chkBaseboards"> Baseboards</label>
+    <label><input type="checkbox" id="chkPainting"> Painting</label>
   </div>
+
+  <!-- PDF -->
+  <div class="pdf-only grid grid-cols-2 gap-1 text-sm mt-2">
+    <span id="pdfDoors"></span>
+    <span id="pdfFloor"></span>
+    <span id="pdfStairs"></span>
+    <span id="pdfBaseboards"></span>
+    <span id="pdfPainting"></span>
+  </div>
+</div>
+
 
   <!-- ITEMS -->
   <table class="w-full border mb-4">
@@ -103,8 +105,9 @@
   </table>
 
   <div id="items" class="space-y-2 no-pdf mb-4"></div>
-
   <button onclick="addItem()" class="border px-3 py-1 no-pdf">+ Add Item</button>
+  <button onclick="removeLastItem()" class="border px-3 py-1 no-pdf">- Delete Item</button>
+
 
   <!-- TOTALS -->
   <div class="mt-6 space-y-2 text-right">
@@ -142,43 +145,56 @@
       commencement. Remaining balance is due upon completion of work.
     </p>
   </div>
- <!-- SIGNATURE & PAYMENTS (COMPACT) -->
-<div class="mt-6 flex gap-4 text-xs">
 
-  <!-- LEFT -->
-  <div class="border w-2/3 p-3 space-y-3">
-    <p>
-      Customer Name&nbsp;&nbsp;
-      <span class="inline-block border-b w-64 align-middle"></span>
-    </p>
+  <!-- SIGNATURE & PAYMENTS -->
+  <div class="mt-6 flex gap-4 text-xs">
 
-    <p>
-      Customer Signature&nbsp;
-      <span class="inline-block border-b w-64 align-middle"></span>
-    </p>
+    <!-- LEFT -->
+    <div class="border w-2/3 p-3 space-y-3">
+      <p>
+        Customer Name
+        <span class="inline-block border-b w-64 align-middle"></span>
+      </p>
+      <p>
+        Customer Signature
+        <span class="inline-block border-b w-64 align-middle"></span>
+      </p>
+    </div>
+
+    <!-- RIGHT -->
+    <div class="border w-1/3 p-3 space-y-2">
+
+      <div class="pdf-only space-y-2">
+        <p>Initial payment: $ <span id="initialPaymentPdf">-</span></p>
+        <p>Intermediate payment: $ <span id="intermediatePaymentPdf">-</span></p>
+        <p>Balance Due: $ <span id="balanceDuePdf">-</span></p>
+      </div>
+
+      <div class="no-pdf space-y-2">
+        <p>
+          Initial payment: $
+          <input id="initialPaymentInput" type="number"
+                 class="border-b w-24 text-right"
+                 oninput="preparePdf()">
+        </p>
+
+        <p>
+          Intermediate payment: $
+          <input id="intermediatePaymentInput" type="number"
+                 class="border-b w-24 text-right"
+                 oninput="preparePdf()">
+        </p>
+
+        <p>
+          Balance Due: $
+          <input id="balanceDueInput" type="number"
+                 class="border-b w-24 text-right"
+                 oninput="preparePdf()">
+        </p>
+      </div>
+
+    </div>
   </div>
-
-  <!-- RIGHT -->
-  <div class="border w-1/3 p-3 space-y-2">
-    <p>
-      Initial payment:&nbsp; $
-      <span class="inline-block border-b w-24 align-middle"></span>
-    </p>
-
-    <p>
-      Intermediate payment:&nbsp; $
-      <span class="inline-block border-b w-24 align-middle"></span>
-    </p>
-
-    <p>
-      Balance Due:&nbsp; $
-      <span class="inline-block border-b w-24 align-middle"></span>
-    </p>
-  </div>
-
-</div>
-
-
 
   <div class="h-8"></div>
 </div>
@@ -194,16 +210,30 @@ invoiceNumber.innerText = inv;
 
 function addItem() {
   const d = document.createElement('div');
-  d.className = "border p-2";
+  d.className = "border p-2 space-y-2";
+
   d.innerHTML = `
-    <input class="desc w-full border p-1 mb-1" placeholder="Description">
+    <input class="desc w-full border p-1" placeholder="Description">
+
     <div class="flex gap-2">
-      <input class="qty w-1/2 border p-1" type="number" placeholder="Qty">
-      <input class="price w-1/2 border p-1" type="number" placeholder="Price">
-    </div>`;
+      <input class="qty w-1/2 border p-1" type="number" placeholder="Qty" oninput="preparePdf()">
+      <input class="price w-1/2 border p-1" type="number" placeholder="Price" oninput="preparePdf()">
+    </div>
+  `;
+
   items.appendChild(d);
 }
-addItem();
+
+function removeLastItem() {
+  const allItems = items.querySelectorAll('div.border');
+  if (allItems.length > 1) {
+    allItems[allItems.length - 1].remove();
+    preparePdf();
+  }
+}
+
+
+
 
 function saveCompany() {
   localStorage.setItem('companyData', JSON.stringify({
@@ -227,12 +257,12 @@ function preparePdf() {
   customerPhonePdf.textContent = customerPhoneInput.value || '-';
   customerEmailPdf.textContent = customerEmailInput.value || '-';
   customerAddressPdf.textContent = customerAddressInput.value || '-';
-
   pdfDoors.textContent = chkDoors.checked ? '☑ DOORS' : '☐ DOORS';
   pdfFloor.textContent = chkFloor.checked ? '☑ FLOOR' : '☐ FLOOR';
   pdfStairs.textContent = chkStairs.checked ? '☑ STAIRS' : '☐ STAIRS';
   pdfBaseboards.textContent = chkBaseboards.checked ? '☑ BASEBOARDS' : '☐ BASEBOARDS';
   pdfPainting.textContent = chkPainting.checked ? '☑ PAINTING' : '☐ PAINTING';
+
 
   itemsPdf.innerHTML = '';
   let subtotalValue = 0;
@@ -261,6 +291,10 @@ function preparePdf() {
 
   const finalTotal = subtotalValue - discountAmount;
   total.textContent = `$${finalTotal.toFixed(2)}`;
+
+  initialPaymentPdf.textContent = initialPaymentInput.value || '0.00';
+  intermediatePaymentPdf.textContent = intermediatePaymentInput.value || '0.00';
+  balanceDuePdf.textContent = balanceDueInput.value || '0.00';
 }
 
 function togglePdf(on) {
@@ -291,3 +325,4 @@ function generatePDF() {
 
 </body>
 </html>
+
